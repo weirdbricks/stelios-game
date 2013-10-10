@@ -14,6 +14,7 @@ DB.create_table :units do
   Integer :level
   Integer :hit_points
   Integer :speed
+  String  :color
   Integer :x
   Integer :y
 end
@@ -25,8 +26,9 @@ units.insert(:name => 'stelios',
 	     :level => 1,
 	     :hit_points => 2,
 	     :speed => 2,
-	     :x => Random.rand(1..20),
-             :y => Random.rand(1..20)
+	     :color => "#FF0000",
+	     :x => Random.rand(1..5),
+             :y => Random.rand(1..5)
 	    )
 units.insert(:name => 'lampros',
              :attack => 1,
@@ -34,34 +36,41 @@ units.insert(:name => 'lampros',
              :level => 1,
              :hit_points => 2,
              :speed => 2,
-             :x => Random.rand(1..20),
-             :y => Random.rand(1..20)
+	     :color => "#00FFFF",
+             :x => Random.rand(1..5),
+             :y => Random.rand(1..5)
             )
 
-	    units.each do |i|
-		puts i[:name]
-		puts i[:x]
-		puts i[:y]
-	    end
+def move_form(name,x,y)
+  form='<form method="POST" action="/move">
+  <input type="hidden" name="name" value="'+name+'" />
+  X:<select name="x">'
+  for i in 1..x
+	form=form+'<option value="'+i.to_s+'">'+i.to_s+'</option>'+"\r\n"
+  end
+  form=form+'</select><br>'
+  form=form+'Y:<select name="y">'
+  for i in 1..y
+	form=form+'<option value="'+i.to_s+'">'+i.to_s+'</option>'+"\r\n"
+  end
+  form=form+'</select>
+  <input type="submit" value="Move" /></form>'
+  return form
+end
 
-
-def draw_table_cell(dataset,table_y,table_x)
-  output=""
-	#  puts "inside function"
+def draw_table_cell(dataset,table_y,table_x,height,width)
   filter = dataset.select.where(:x=>table_x, :y=>table_y)
   if filter.count==0
-	 output="-=-"
+	 output="x:#{table_x},y:#{table_y}"
   else
 	 output="<b>"
          filter.each do |i|
-             output=output+i[:name]
+             output=""+output+i[:name]+"<p>"+move_form(i[:name],height,width)
          end
 	 output=output+"</b>"
   end
   return output
 end
-
-draw_table_cell(units, 1,1)
 
 def draw_table(dataset,height,width)
   table = ""
@@ -79,7 +88,7 @@ def draw_table(dataset,height,width)
   for y in 1..height
 	  table = table + "<tr>"
 		for x in 1..width
-			table = table + "<td>" + draw_table_cell(dataset,x,y).to_s + "</td>"
+			table = table + "<td>" + draw_table_cell(dataset,x,y,height,width).to_s + "</td>"
 		end
 	  table = table + "</tr>\n\r"
   end
@@ -87,7 +96,27 @@ def draw_table(dataset,height,width)
   return table
 end
 
+def move_unit(dataset,name,x,y)
+  puts "move called!"
+  id=dataset.select.where(:name=>name)
+  id=id.first[:id]
+  dataset.filter(:id=>id).update(:x=>x,:y=>y)
+end
+
+move_unit(units,"lampros",3,2)
+
 
 get '/' do
-	draw_table(units,20,20)	
+	draw_table(units,5,5)	
+end
+
+post '/move' do
+   name=params[:name]
+   puts name
+   x=params[:x] 
+   puts x
+   y=params[:y]
+   puts y
+   move_unit(units,name,x,y)
+   redirect "/"
 end
