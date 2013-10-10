@@ -97,7 +97,6 @@ def draw_table(dataset,height,width)
 end
 
 def move_unit(dataset,name,x,y)
-  puts "move called!"
   id=dataset.select.where(:name=>name)
   id=id.first[:id]
   dataset.filter(:id=>id).update(:x=>x,:y=>y)
@@ -111,12 +110,6 @@ get '/' do
 end
 
 post '/move' do
-   name=params[:name]
-   puts name
-   x=params[:x] 
-   puts x
-   y=params[:y]
-   puts y
-   move_unit(units,name,x,y)
-   redirect "/"
+	move_unit(units,params[:name],params[:x],params[:y])
+  	redirect "/"
 end
